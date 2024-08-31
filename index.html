@@ -731,5 +731,343 @@ $(document).ready(function() {
 <script>
             stickyFooter.init();
         </script>
+
+
+
+
+
+
+<!-- Game Area with Moving Image, Collision Box, Apple Object, Pear Object, Moss Ball Object, and Falling Fruits -->
+<div id="gameArea">
+    <div id="movingImage">
+        <div id="collisionBox"></div>
+    </div>
+    <div id="fruits">
+        <div class="fruit" id="apple"></div> <!-- Add apple to the fruits container -->
+        <div class="fruit" id="pear"></div> <!-- Add pear to the fruits container -->
+        <div class="fruit" id="mossBall"></div> <!-- Add moss ball to the fruits container -->
+    </div>
+    <div id="scoreContainer">
+        <div id="scoreBox">
+            Score: <span id="scoreValue">0</span>
+        </div>
+    </div> <!-- Score counter container -->
+    <div id="lives">
+        <div id="livesBox">
+            <span id="livesLabel">Lives:</span>
+            <div id="livesContainer"></div> <!-- Lives counter -->
+        </div>
+    </div>
+    <div id="gameOverScreen">
+        <div id="gameOverContent">
+            <h1>Game Over</h1>
+            <p>Your Score: <span id="finalScore">0</span></p>
+            <button id="playAgainButton">Play Again</button>
+            <button id="endGameButton">End Game</button>
+        </div>
+    </div> <!-- Game Over Screen -->
+</div>
+
+<style>
+    body {
+        margin: 0;
+        overflow: auto; /* Allow scrolling */
+        position: relative;
+    }
+    #gameArea {
+        position: fixed; /* Fixed position to stay in view while scrolling */
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 1000; /* Ensure it appears above other elements */
+        pointer-events: none; /* Allow interaction with elements beneath */
+    }
+    #movingImage {
+        position: absolute;
+        bottom: 0; /* Position at the bottom of the viewport */
+        left: 0; /* Start at the left edge */
+        transform: translateX(0); /* No horizontal shift */
+        width: 100px; /* Adjust size as needed */
+        height: 100px; /* Adjust size as needed */
+        background-image: url('https://f2.toyhou.se/file/f2-toyhou-se/characters/28745865?1723573211');
+        background-size: cover;
+        pointer-events: none; /* Ensure image itself does not block interactions */
+        z-index: 1001; /* Ensure it appears above falling fruits */
+    }
+    #fruits {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none; /* Allow interaction with elements beneath */
+        z-index: 1000; /* Ensure fruits are below score and lives */
+    }
+    .fruit {
+        position: absolute;
+        width: 50px; /* Adjust size as needed */
+        height: 50px; /* Adjust size as needed */
+        background-size: cover;
+    }
+    #apple {
+        background-image: url('https://icons.iconarchive.com/icons/google/noto-emoji-food-drink/512/32349-red-apple-icon.png');
+    }
+    #pear {
+        background-image: url('https://cdn-icons-png.flaticon.com/512/415/415716.png');
+    }
+    #mossBall {
+        background-image: url('https://cloud.refsheet.net/images/images/002/036/532/large/moss.png?1724982483');
+    }
+    #scoreContainer {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1002; /* Ensure score is above all other content */
+    }
+    #scoreBox {
+        background-color: green; /* Green box for score */
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 24px;
+    }
+    #lives {
+        position: absolute;
+        top: 10px; /* Reset to original position */
+        left: 10px; /* Reset to original position */
+        font-size: 24px;
+        color: white;
+        z-index: 1002; /* Ensure lives are above all other content */
+    }
+    #livesBox {
+        background-color: green; /* Green box for lives */
+        padding: 20px 30px; /* Padding size maintained */
+        border-radius: 15px; /* Larger border radius for more rounded corners */
+        display: flex;
+        align-items: center;
+        transform: translate(-15px, -15px); /* Move the box up and left */
+    }
+    #livesContainer {
+        display: flex;
+        align-items: center;
+        margin-left: 10px; /* Add space between "Lives:" label and dots */
+    }
+    .life {
+        width: 25px; /* Increased size */
+        height: 25px; /* Increased size */
+        background-color: green;
+        border-radius: 50%;
+        margin-right: 5px;
+        border: 2px solid white; /* White outline around the green dots */
+    }
+    #gameOverScreen {
+        display: none; /* Initially hidden */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.8); /* Dark background with transparency */
+        color: white;
+        z-index: 1003; /* Ensure it is above all other content */
+        display: flex; /* Flex container for centering content */
+        align-items: center; /* Center vertically */
+        justify-content: center; /* Center horizontally */
+        text-align: center;
+        pointer-events: auto; /* Allow interaction with the game over screen */
+    }
+    #gameOverContent {
+        background: black;
+        padding: 20px;
+        border-radius: 10px;
+    }
+    #gameOverContent h1 {
+        margin: 0;
+        font-size: 48px;
+    }
+    #gameOverContent p {
+        font-size: 24px;
+    }
+    #gameOverContent button {
+        background: green;
+        border: none;
+        color: white;
+        font-size: 20px;
+        padding: 10px 20px;
+        margin: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    #gameOverContent button:hover {
+        background: darkgreen;
+    }
+</style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Game JavaScript code below! -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const movingImage = document.getElementById('movingImage');
+        const fruitsContainer = document.getElementById('fruits');
+        const scoreElement = document.getElementById('scoreValue');
+        const livesContainer = document.getElementById('livesContainer');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const finalScoreElement = document.getElementById('finalScore');
+        const playAgainButton = document.getElementById('playAgainButton');
+        const endGameButton = document.getElementById('endGameButton');
+        const fruitTypes = [
+            { id: 'apple', image: 'https://icons.iconarchive.com/icons/google/noto-emoji-food-drink/512/32349-red-apple-icon.png' },
+            { id: 'pear', image: 'https://cdn-icons-png.flaticon.com/512/415/415716.png' },
+            { id: 'mossBall', image: 'https://cloud.refsheet.net/images/images/002/036/532/large/moss.png?1724982483' }
+        ];
+        const stepSize = 7; // Speed of movement
+        const fruitFallSpeed = 4; // Speed at which fruits fall
+        let positionX = window.innerWidth / 2 - movingImage.clientWidth / 2;
+        let keys = {};
+        let score = 0;
+        let lives = 3;
+        let fruitInterval;
+
+        function updateLives() {
+            livesContainer.innerHTML = ''; // Clear existing lives
+            for (let i = 0; i < lives; i++) {
+                const life = document.createElement('div');
+                life.className = 'life';
+                livesContainer.appendChild(life);
+            }
+        }
+
+        function moveImage() {
+            if (keys['a'] || keys['ArrowLeft']) {
+                positionX -= stepSize;
+            }
+            if (keys['d'] || keys['ArrowRight']) {
+                positionX += stepSize;
+            }
+
+            // Constrain the image within the viewport width
+            positionX = Math.max(0, Math.min(positionX, window.innerWidth - movingImage.clientWidth));
+            movingImage.style.left = positionX + 'px';
+
+            requestAnimationFrame(moveImage);
+        }
+
+        function spawnFruit() {
+            if (fruitsContainer.children.length >= 4) { // Limit the number of fruits on screen
+                return;
+            }
+            const fruitType = fruitTypes[Math.floor(Math.random() * fruitTypes.length)];
+            const fruit = document.createElement('div');
+            fruit.className = 'fruit';
+            fruit.id = fruitType.id; // Set fruit type ID for styling
+            fruit.style.backgroundImage = `url(${fruitType.image})`; // Set fruit image
+            fruit.style.left = Math.random() * (window.innerWidth - 50) + 'px'; // Random horizontal position
+            fruit.style.top = '0px'; // Start at the top of the viewport
+            fruitsContainer.appendChild(fruit);
+
+            function fallFruit() {
+                let fruitTop = parseFloat(fruit.style.top);
+                let fruitLeft = parseFloat(fruit.style.left);
+                let fruitWidth = fruit.clientWidth;
+                let fruitHeight = fruit.clientHeight;
+
+                // Calculate the bounds of the fruit
+                let fruitRight = fruitLeft + fruitWidth;
+                let fruitBottom = fruitTop + fruitHeight;
+
+                // Calculate the bounds of the moving image
+                let movingImageLeft = positionX;
+                let movingImageTop = window.innerHeight - movingImage.clientHeight;
+                let movingImageWidth = movingImage.clientWidth;
+                let movingImageHeight = movingImage.clientHeight;
+                let movingImageRight = movingImageLeft + movingImageWidth;
+                let movingImageBottom = movingImageTop + movingImageHeight;
+
+                if (fruitBottom > movingImageTop &&
+                    fruitTop < movingImageBottom &&
+                    fruitRight > movingImageLeft &&
+                    fruitLeft < movingImageRight) {
+                    // Fruit is overlapping with the moving image
+                    fruit.remove();
+                    score++;
+                    scoreElement.textContent = score;
+                } else if (fruitTop < window.innerHeight) {
+                    // Continue falling if not yet at the bottom
+                    fruitTop += fruitFallSpeed;
+                    fruit.style.top = fruitTop + 'px';
+                    requestAnimationFrame(fallFruit);
+                } else {
+                    // Remove fruit when it reaches the bottom
+                    fruit.remove();
+                    lives--;
+                    updateLives();
+                    if (lives <= 0) {
+                        endGame();
+                    }
+                }
+            }
+
+            fallFruit();
+        }
+
+        function startGame() {
+            positionX = window.innerWidth / 2 - movingImage.clientWidth / 2;
+            movingImage.style.left = positionX + 'px';
+            score = 0;
+            scoreElement.textContent = score;
+            lives = 3;
+            updateLives();
+            gameOverScreen.style.display = 'none'; // Hide game over screen
+            fruitInterval = setInterval(spawnFruit, 2000); // Start spawning fruits at regular intervals
+            requestAnimationFrame(moveImage); // Start the animation loop
+        }
+
+        function endGame() {
+            clearInterval(fruitInterval); // Stop spawning fruits
+            gameOverScreen.style.display = 'flex'; // Show the game over screen
+            finalScoreElement.textContent = score; // Display final score
+        }
+
+        playAgainButton.addEventListener('click', function() {
+            window.location.href = 'https://fennixfluff.github.io/https-toyhou.se-28745865.mintoharu-yukiko/';
+        });
+
+        endGameButton.addEventListener('click', function() {
+            window.location.href = 'https://toyhou.se/28745865.mintoharu-yukiko';
+        });
+
+        document.addEventListener('keydown', (event) => {
+            keys[event.key] = true;
+        });
+
+        document.addEventListener('keyup', (event) => {
+            keys[event.key] = false;
+        });
+
+        // Initialize game
+        startGame(); // Start the game initially
+    });
+</script>
+
+
+
+
+
+
+
+
+
 </body>
 </html>
